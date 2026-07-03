@@ -2,56 +2,390 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<title>Soul Chat — Prototypen</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
+<title>Soul Chat — Flow (Variante B)</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
 <style>
-  :root{--cream:#F4EFE7;--ink:#2C2822;--ink-soft:#7A7266;--gold:#BE9A6E;--gold-deep:#A6835B;
-    --gold-glow:rgba(190,154,110,.45);--serif:'Fraunces',Georgia,serif;--sans:'Inter',sans-serif}
+  :root{
+    --cream:#F4EFE7;--cream-top:#F7F2EA;--cream-bot:#EBE0CF;
+    --ink:#2C2822;--ink-soft:#8A8073;
+    --gold:#BE9A6E;--gold-deep:#A6835B;--gold-glow:rgba(190,154,110,.4);
+    --serif:'Fraunces',Georgia,serif;--sans:'Inter',-apple-system,sans-serif;
+  }
   *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-  body{font-family:var(--sans);color:var(--ink);min-height:100dvh;
-    background:radial-gradient(circle at 50% 0%,#EFE6D7,#E1D6C2);
-    display:flex;flex-direction:column;align-items:center;justify-content:center;
-    padding:40px 22px;gap:6px}
-  .orb{width:40px;height:40px;border-radius:50%;
+  html,body{height:100%}
+  body{font-family:var(--sans);background:#E7DECF;
+    display:flex;align-items:center;justify-content:center;color:var(--ink)}
+  .phone{position:relative;width:100%;max-width:440px;height:100dvh;overflow:hidden;
+    display:flex;flex-direction:column;isolation:isolate;
+    background:linear-gradient(180deg,var(--cream-top) 0%,#F1E7D8 45%,var(--cream-bot) 100%)}
+  @media(min-width:600px){.phone{height:min(920px,94dvh);border-radius:42px;
+    box-shadow:0 40px 90px -30px rgba(60,45,25,.55),0 0 0 1px rgba(255,255,255,.4) inset}}
+
+  /* faint top glow, slow breath */
+  .glow{position:absolute;top:-18%;left:50%;transform:translateX(-50%);width:120%;height:42%;
+    background:radial-gradient(circle,rgba(214,182,138,.4),transparent 68%);
+    filter:blur(30px);z-index:0;pointer-events:none;animation:breath 12s ease-in-out infinite}
+  @keyframes breath{0%,100%{opacity:.65;transform:translateX(-50%) scale(1)}
+    50%{opacity:1;transform:translateX(-50%) scale(1.12)}}
+
+  /* top bar */
+  .top{position:relative;z-index:4;display:flex;align-items:center;gap:14px;
+    padding:calc(env(safe-area-inset-top) + 18px) 22px 4px}
+  .back{width:30px;height:30px;display:flex;align-items:center;justify-content:center;
+    color:var(--ink);cursor:pointer;flex:0 0 auto;opacity:.55;transition:.2s}
+  .back:hover{opacity:1}
+  .back svg{width:22px;height:22px}
+  .track{flex:1;height:5px;border-radius:4px;background:rgba(120,105,80,.16);overflow:hidden}
+  .fill{height:100%;width:0;border-radius:4px;background:linear-gradient(90deg,var(--gold),var(--gold-deep));
+    transition:width .7s cubic-bezier(.4,0,.2,1)}
+  .snd{width:30px;height:30px;display:flex;align-items:center;justify-content:center;
+    color:var(--ink-soft);cursor:pointer;flex:0 0 auto;transition:.2s}
+  .snd:hover{color:var(--ink)}
+  .snd svg{width:18px;height:18px}
+
+  /* question stage */
+  .stage{position:relative;z-index:2;flex:1;display:flex;flex-direction:column;overflow:hidden}
+  .qArea{padding:12dvh 30px 20px;transition:opacity .4s ease,transform .4s ease;flex:1;overflow-y:auto}
+  .qArea::-webkit-scrollbar{width:0}
+  .qArea.leaving{opacity:0;transform:translateY(-26px)}
+  .qArea.closing{display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;
+    padding-top:6dvh}
+  .q{font-family:var(--serif);font-size:23px;line-height:1.42;font-weight:500;color:var(--ink);
+    margin-bottom:.7em}
+  .q:last-child{margin-bottom:0}
+  @media(max-height:700px){.q{font-size:20px}}
+  .w{opacity:0;transition:opacity .38s ease}
+  .w.show{opacity:1}
+  .cursor{display:inline-block;width:2px;height:.92em;background:var(--gold-deep);
+    margin-left:2px;vertical-align:-1px;animation:blink 1s step-end infinite;border-radius:2px}
+  @keyframes blink{50%{opacity:0}}
+  .dots{display:inline-flex;gap:6px;padding:8px 0}
+  .dots span{width:8px;height:8px;border-radius:50%;background:var(--gold);opacity:.5;
+    animation:bounce 1.4s infinite both}
+  .dots span:nth-child(2){animation-delay:.2s}.dots span:nth-child(3){animation-delay:.4s}
+  @keyframes bounce{0%,60%,100%{opacity:.35;transform:translateY(0)}30%{opacity:1;transform:translateY(-5px)}}
+
+  .seal{width:56px;height:56px;border-radius:50%;margin-bottom:22px;
     background:radial-gradient(circle at 35% 30%,#fff,var(--gold) 55%,var(--gold-deep));
-    box-shadow:0 0 32px 8px var(--gold-glow);margin-bottom:14px;
-    animation:orb 6s ease-in-out infinite}
+    box-shadow:0 0 34px 8px var(--gold-glow);animation:orb 6s ease-in-out infinite}
   @keyframes orb{0%,100%{transform:scale(1)}50%{transform:scale(1.16)}}
-  h1{font-family:var(--serif);font-size:30px;font-weight:600}
-  .sub{color:var(--ink-soft);font-size:14px;text-align:center;max-width:30ch;margin-bottom:26px;line-height:1.5}
-  .cards{display:flex;flex-direction:column;gap:16px;width:100%;max-width:400px}
-  a.card{display:block;text-decoration:none;color:inherit;background:rgba(255,255,255,.85);
-    border:1px solid rgba(190,154,110,.3);border-radius:22px;padding:22px 22px;
-    box-shadow:0 14px 34px -20px rgba(66,52,33,.4);transition:.22s}
-  a.card:hover{transform:translateY(-3px);box-shadow:0 22px 44px -20px rgba(66,52,33,.5);border-color:var(--gold)}
-  .tag{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--gold-deep);font-weight:600}
-  a.card h2{font-family:var(--serif);font-size:22px;font-weight:600;margin:6px 0 6px}
-  a.card p{font-size:13.5px;color:var(--ink-soft);line-height:1.5}
-  .go{margin-top:14px;display:inline-flex;align-items:center;gap:7px;font-size:14px;font-weight:600;color:var(--gold-deep)}
-  .foot{margin-top:26px;font-size:12px;color:var(--ink-soft);text-align:center;max-width:32ch;line-height:1.5}
+
+  /* input bar (always there) */
+  .bar{position:relative;z-index:3;padding:8px 16px calc(env(safe-area-inset-bottom) + 16px);
+    transition:opacity .4s ease,transform .4s ease}
+  .bar.hidden{opacity:0;transform:translateY(30px);pointer-events:none}
+  .inp{display:flex;align-items:flex-end;gap:8px;background:rgba(255,255,255,.92);
+    border-radius:28px;padding:7px 7px 7px 22px;
+    box-shadow:0 10px 30px -14px rgba(66,52,33,.4),0 0 0 1px rgba(255,255,255,.5) inset;
+    transition:.2s}
+  .inp:focus-within{box-shadow:0 12px 34px -12px var(--gold-glow),0 0 0 1.5px var(--gold) inset}
+  textarea{flex:1;border:none;background:none;resize:none;outline:none;
+    font-family:var(--sans);font-size:16.5px;line-height:1.45;color:var(--ink);
+    padding:11px 0;max-height:132px;overflow-y:auto}
+  textarea::placeholder{color:#B8AE9C}
+  .send{width:46px;height:46px;border-radius:50%;border:none;cursor:pointer;flex:0 0 auto;
+    display:flex;align-items:center;justify-content:center;color:#fff;transition:.2s;
+    background:linear-gradient(135deg,#D8CBB4,#C9B99C)}
+  .send.on{background:linear-gradient(135deg,var(--gold),var(--gold-deep));
+    box-shadow:0 8px 18px -8px rgba(166,131,91,.9)}
+  .send.on:hover{transform:translateY(-1px)}
+  .send:active{transform:scale(.94)}
+  .send svg{width:20px;height:20px}
+
+  .restart{position:relative;z-index:3;text-align:center;padding-bottom:calc(env(safe-area-inset-bottom) + 20px);
+    font-size:13px;color:var(--gold-deep);cursor:pointer;opacity:0;transition:.4s;font-weight:600}
+  .restart.show{opacity:.8}
+  .restart:hover{opacity:1}
+
+  /* CTA button (replaces input on chosen steps) */
+  .ctaBar{position:relative;z-index:3;display:flex;justify-content:center;
+    padding:8px 16px calc(env(safe-area-inset-bottom) + 16px)}
+  .ctaBar.hidden{display:none}
+  .ctaBtn{width:100%;max-width:340px;padding:17px;border-radius:26px;border:none;cursor:pointer;
+    font-family:var(--sans);font-size:16px;font-weight:600;color:#fff;
+    background:linear-gradient(135deg,var(--gold),var(--gold-deep));
+    box-shadow:0 14px 30px -12px rgba(166,131,91,.9);transition:.2s;
+    animation:ctaIn .5s cubic-bezier(.2,.8,.2,1) both}
+  .ctaBtn:hover{transform:translateY(-2px)}
+  .ctaBtn:active{transform:scale(.98)}
+  @keyframes ctaIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+
+  .spark{position:absolute;z-index:6;pointer-events:none;animation:rise 2.6s ease-out forwards}
+  @keyframes rise{0%{opacity:0;transform:translateY(0) scale(.4)}15%{opacity:1}
+    100%{opacity:0;transform:translateY(-190px) scale(1.1)}}
 </style>
 </head>
 <body>
-  <div class="orb"></div>
-  <h1>Soul Chat</h1>
-  <div class="sub">Zwei UX-Richtungen für das Leadmagnet-Erlebnis. Am besten auf dem Handy öffnen.</div>
-  <div class="cards">
-    <a class="card" href="chat.html">
-      <div class="tag">Variante A · Conversation</div>
-      <h2>Das lebendige Gespräch</h2>
-      <p>Wie ein Messenger, aber warm: Präsenz-Orb, „schreibt…", Nachrichten kommen einzeln, Quick-Reply-Chips, gemeinsamer Atem-Moment und personalisiertes Reveal.</p>
-      <span class="go">Öffnen →</span>
-    </a>
-    <a class="card" href="flow.html">
-      <div class="tag">Variante B · Flow (Stella-Style)</div>
-      <h2>Eine Frage, ein Screen</h2>
-      <p>Kein Chat-Verlauf. Der Chat schreibt animiert („Ich bin du. Deine Seele."), du antwortest per Text, es blättert weiter. Immer Text-Input, sanftes Nachhaken bei „Ja"-Antworten, Fortschrittsbalken, Zurück-Button.</p>
-      <span class="go">Öffnen →</span>
-    </a>
+<div class="phone">
+  <div class="glow"></div>
+  <div class="top">
+    <div class="back" id="back" title="Zurück">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+    </div>
+    <div class="track"><div class="fill" id="fill"></div></div>
+    <div class="snd" id="sound" title="Ton an / aus">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/></svg>
+    </div>
   </div>
-  <div class="foot">Prototyp · Laura Seiler Life Coaching. Ton-Toggle & Neustart sind in jeder Variante oben.</div>
+
+  <div class="stage">
+    <div class="qArea" id="qArea"></div>
+    <div class="bar" id="bar">
+      <div class="inp">
+        <textarea id="ta" rows="1" placeholder="Deine Antwort" autocomplete="off"></textarea>
+        <button class="send" id="send" title="Senden">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M13 6l6 6-6 6"/></svg>
+        </button>
+      </div>
+    </div>
+    <div class="ctaBar hidden" id="ctaBar"><button class="ctaBtn" id="ctaBtn">Weiter</button></div>
+    <div class="restart" id="restart">Von vorn beginnen</div>
+  </div>
+</div>
+
+<script>
+const qArea=document.getElementById('qArea');
+const ta=document.getElementById('ta');
+const sendBtn=document.getElementById('send');
+const bar=document.getElementById('bar');
+const fill=document.getElementById('fill');
+const backBtn=document.getElementById('back');
+const restartBtn=document.getElementById('restart');
+const ctaBar=document.getElementById('ctaBar');
+const ctaBtn=document.getElementById('ctaBtn');
+const phone=document.querySelector('.phone');
+
+/* ---- conversation script (Soul persona) ---- */
+const steps=[
+  {key:'name', ph:'Dein Name',
+   msg:()=>`Schön, dass du hier bist. Atme kurz durch, der Alltag kann eine Minute warten.\n\nWie heißt du?`},
+  {key:'ready', ph:'Deine Antwort …', cta:'Ja, lass uns loslegen',
+   msg:a=>`Schön, ${a.name}.\n\nBevor ich weitergehe, kurz zu mir: Ich bin du. Der Teil, der schon da war, bevor du gelernt hast, Rollen zu spielen. Deine Seele, wenn du so willst.\n\nHeute frag ich dich ein paar Dinge, für die sonst kein Raum ist. Bereit?`},
+  {key:'moment', ph:'Was ist da passiert?',
+   msg:()=>`Gut. Dann lass uns anfangen.\n\nSchließ kurz die Augen und fühl in die letzten Tage rein. Gab es einen Moment, der dich aus der Bahn geworfen hat, oder wo du gemerkt hast, dass du nur noch funktionierst?`,
+   nudge:a=>`Ich meine den Moment selbst, ${a.name}. Den einen Augenblick, der schwer war. Was ist da passiert?`},
+  {key:'feeling', ph:'Was fühlst du?',
+   msg:()=>`Oh ja, das sitzt.\n\nWas kommt da in dir hoch? Ein Gefühl, ein Gedanke, vielleicht beides?`,
+   nudge:()=>`Bleib einen Moment dabei. Wenn du ganz ehrlich bist, was ist das für ein Gefühl?`},
+  {key:'wish', ph:'Ich hätte mir gewünscht …',
+   msg:()=>`Das darf alles da sein. Solche Gefühle stehen oft direkt nebeneinander.\n\nWas hättest du dir stattdessen gewünscht?`},
+  {key:'alive', ph:'Dieser Moment war …',
+   msg:()=>`Ja. Genau das fehlt dann da, wo es am meisten zieht.\n\nJetzt die andere Seite: Wann hast du dich zuletzt so richtig bei dir gefühlt? So lebendig, dass du die Zeit vergessen hast?`},
+  {key:'email', ph:'deine@email.de', email:true,
+   msg:a=>`Das klingt nach einem Ort, an dem du wieder Luft bekommst. Danke, dass du so ehrlich warst, ${a.name}.\n\nLetzte Sache: Damit meine erste Nachricht bei dir landet, verrate mir noch deine E-Mail.`},
+];
+
+let idx=0, busy=false, nudged=false, soundOn=true, skipFn=null;
+const answers={}, seen=new Set();
+
+const setProg=f=>fill.style.width=Math.round(f*100)+'%';
+function buzz(){ if(navigator.vibrate) navigator.vibrate(8); }
+let actx;
+function chime(){
+  if(!soundOn) return;
+  try{
+    actx=actx||new (window.AudioContext||window.webkitAudioContext)();
+    const t=actx.currentTime;
+    [[587,0],[784,.09]].forEach(([f,dl])=>{
+      const o=actx.createOscillator(),g=actx.createGain();
+      o.type='sine';o.frequency.value=f;
+      g.gain.setValueAtTime(0,t+dl);g.gain.linearRampToValueAtTime(.045,t+dl+.02);
+      g.gain.exponentialRampToValueAtTime(.0001,t+dl+.5);
+      o.connect(g).connect(actx.destination);o.start(t+dl);o.stop(t+dl+.55);
+    });
+  }catch(e){}
+}
+function sparkles(){
+  const em=['✨','·','✦','˚','✧'];
+  for(let k=0;k<18;k++){
+    const s=document.createElement('div');s.className='spark';s.textContent=em[k%em.length];
+    s.style.left=(18+Math.random()*64)+'%';s.style.bottom=(26+Math.random()*28)+'%';
+    s.style.fontSize=(10+Math.random()*14)+'px';s.style.animationDelay=(Math.random()*.5)+'s';
+    phone.appendChild(s);setTimeout(()=>s.remove(),3200);
+  }
+}
+
+/* build paragraphs + word spans */
+function buildText(text){
+  const frag=document.createDocumentFragment(); const words=[];
+  text.split('\n\n').forEach(par=>{
+    const p=document.createElement('p'); p.className='q';
+    par.split(/(\s+)/).forEach(tok=>{
+      if(tok==='' ) return;
+      if(/^\s+$/.test(tok)){ p.appendChild(document.createTextNode(tok)); }
+      else{ const s=document.createElement('span'); s.className='w'; s.textContent=tok; p.appendChild(s); words.push(s); }
+    });
+    frag.appendChild(p);
+  });
+  return {frag,words};
+}
+
+function renderInstant(text){
+  qArea.innerHTML='';
+  const {frag,words}=buildText(text);
+  qArea.appendChild(frag);
+  words.forEach(w=>w.classList.add('show'));
+}
+
+/* animated "writing" — types out character by character, like a chatbot.
+   Tap the message to skip to the full text. */
+const CHAR_MS=22, SENT_PAUSE=260, COMMA_PAUSE=130;
+function writeMessage(text){
+  return new Promise(resolve=>{
+    busy=true; setSendState();
+    qArea.innerHTML='';
+    const dots=document.createElement('div'); dots.className='dots';
+    dots.innerHTML='<span></span><span></span><span></span>';
+    qArea.appendChild(dots);
+    let cancelled=false, timer=null;
+    function done(instant){
+      if(cancelled) return; cancelled=true;
+      clearTimeout(timer); clearTimeout(startTimer);
+      if(instant) renderInstant(text);
+      skipFn=null; busy=false; setSendState(); resolve();
+    }
+    const startTimer=setTimeout(()=>{
+      qArea.innerHTML='';
+      const paras=text.split('\n\n');
+      let pi=0, ci=0;
+      let pEl=document.createElement('p'); pEl.className='q'; qArea.appendChild(pEl);
+      const cursor=document.createElement('span'); cursor.className='cursor'; pEl.appendChild(cursor);
+      (function tick(){
+        if(cancelled) return;
+        if(pi>=paras.length){ cursor.remove(); done(false); return; }
+        const para=paras[pi];
+        if(ci<para.length){
+          const ch=para[ci++];
+          cursor.insertAdjacentText('beforebegin', ch);
+          qArea.scrollTop=qArea.scrollHeight;
+          let d=CHAR_MS;
+          if('.!?'.includes(ch)) d=SENT_PAUSE;
+          else if(',;:'.includes(ch)) d=COMMA_PAUSE;
+          timer=setTimeout(tick,d);
+        }else{
+          pi++; ci=0;
+          if(pi<paras.length){
+            pEl=document.createElement('p'); pEl.className='q'; qArea.appendChild(pEl); pEl.appendChild(cursor);
+            timer=setTimeout(tick,300);
+          }else{ cursor.remove(); done(false); }
+        }
+      })();
+    },560);
+    skipFn=()=>done(true);
+  });
+}
+
+function render(back){
+  const step=steps[idx];
+  setProg(idx/steps.length);
+  nudged=false;
+  ta.value=answers[step.key]||'';
+  ta.placeholder=step.ph||'Deine Antwort';
+  ta.setAttribute('inputmode', step.email?'email':'text');
+  ctaBar.classList.add('hidden');
+  bar.style.display = step.cta ? 'none' : '';
+  autosize();
+  const text=step.msg(answers);
+  if(back||seen.has(idx)){ renderInstant(text); afterRender(); }
+  else{ seen.add(idx); writeMessage(text).then(afterRender); }
+}
+function afterRender(){ showControls(steps[idx]); setSendState(); }
+function showControls(step){
+  if(step && step.cta){
+    bar.style.display='none';
+    ctaBtn.textContent=step.cta;
+    ctaBar.classList.remove('hidden');
+  }else{
+    ctaBar.classList.add('hidden');
+    bar.style.display=''; bar.classList.remove('hidden');
+    try{ta.focus();}catch(e){}
+  }
+}
+
+function isLowEffort(v){
+  const s=v.replace(/[.!?…]/g,'').trim().toLowerCase();
+  const fillers=['ja','nein','ok','okay','nö','joa','yes','no','vielleicht','weiss nicht','weiß nicht','keine ahnung','k.a.','hm','naja'];
+  return s.length<=3 || fillers.includes(s);
+}
+
+function submit(){
+  if(busy) return;
+  const v=ta.value.trim(); if(!v) return;
+  const step=steps[idx];
+  // gentle nudge on low-effort answers to reflective questions
+  if(step.nudge && !nudged && isLowEffort(v)){
+    nudged=true; buzz();
+    ta.value=''; autosize(); setSendState();
+    writeMessage(step.nudge(answers)).then(afterRender);
+    return;
+  }
+  answers[step.key]=v; buzz(); chime();
+  idx++;
+  if(idx>=steps.length){ finish(); return; }
+  qArea.classList.add('leaving');
+  setTimeout(()=>{ qArea.classList.remove('leaving'); render(false); },380);
+  ta.value=''; autosize(); setSendState();
+}
+
+function finish(){
+  setProg(1);
+  qArea.classList.add('leaving');
+  setTimeout(()=>{
+    qArea.classList.remove('leaving'); qArea.classList.add('closing');
+    bar.classList.add('hidden');
+    const a=answers;
+    writeMessage(`Bis gleich, ${a.name}.\n\nMeine erste Nachricht ist schon auf dem Weg zu dir. Atme einmal tief durch. Du bist genau richtig.`).then(()=>{
+      const seal=document.createElement('div'); seal.className='seal'; qArea.prepend(seal);
+      qArea.scrollTop=0; sparkles(); chime();
+      restartBtn.classList.add('show');
+    });
+  },380);
+}
+
+function setSendState(){
+  const active = !busy && ta.value.trim().length>0;
+  sendBtn.classList.toggle('on', active);
+}
+function autosize(){ ta.style.height='auto'; ta.style.height=Math.max(44,Math.min(ta.scrollHeight||44,132))+'px'; }
+
+/* events */
+qArea.addEventListener('click',()=>{ if(skipFn) skipFn(); });
+sendBtn.addEventListener('click',submit);
+ctaBtn.addEventListener('click',()=>{
+  if(busy) return;
+  const step=steps[idx];
+  answers[step.key]=step.cta; buzz(); chime();
+  idx++;
+  if(idx>=steps.length){ finish(); return; }
+  ctaBar.classList.add('hidden');
+  qArea.classList.add('leaving');
+  setTimeout(()=>{ qArea.classList.remove('leaving'); render(false); },380);
+});
+ta.addEventListener('input',()=>{autosize();setSendState();});
+ta.addEventListener('keydown',e=>{ if(e.key==='Enter'&&!e.shiftKey){ e.preventDefault(); submit(); } });
+backBtn.addEventListener('click',()=>{
+  if(busy||idx===0) return;
+  idx--; bar.classList.remove('hidden'); restartBtn.classList.remove('show');
+  qArea.classList.remove('closing');
+  qArea.classList.add('leaving');
+  setTimeout(()=>{ qArea.classList.remove('leaving'); render(true); },300);
+});
+document.getElementById('sound').addEventListener('click',function(){
+  soundOn=!soundOn; this.style.opacity=soundOn?'1':'.4'; if(soundOn)chime();
+});
+restartBtn.addEventListener('click',start);
+
+function start(){
+  idx=0; seen.clear(); Object.keys(answers).forEach(k=>delete answers[k]);
+  bar.classList.remove('hidden'); bar.style.display=''; ctaBar.classList.add('hidden');
+  restartBtn.classList.remove('show');
+  qArea.classList.remove('closing'); ta.value=''; autosize();
+  render(false);
+}
+start();
+</script>
 </body>
 </html>
