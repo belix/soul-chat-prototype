@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Soul Chat — Prototypen</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+  :root{--cream:#F4EFE7;--ink:#2C2822;--ink-soft:#7A7266;--gold:#BE9A6E;--gold-deep:#A6835B;
+    --gold-glow:rgba(190,154,110,.45);--serif:'Fraunces',Georgia,serif;--sans:'Inter',sans-serif}
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  body{font-family:var(--sans);color:var(--ink);min-height:100dvh;
+    background:radial-gradient(circle at 50% 0%,#EFE6D7,#E1D6C2);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    padding:40px 22px;gap:6px}
+  .orb{width:40px;height:40px;border-radius:50%;
+    background:radial-gradient(circle at 35% 30%,#fff,var(--gold) 55%,var(--gold-deep));
+    box-shadow:0 0 32px 8px var(--gold-glow);margin-bottom:14px;
+    animation:orb 6s ease-in-out infinite}
+  @keyframes orb{0%,100%{transform:scale(1)}50%{transform:scale(1.16)}}
+  h1{font-family:var(--serif);font-size:30px;font-weight:600}
+  .sub{color:var(--ink-soft);font-size:14px;text-align:center;max-width:30ch;margin-bottom:26px;line-height:1.5}
+  .cards{display:flex;flex-direction:column;gap:16px;width:100%;max-width:400px}
+  a.card{display:block;text-decoration:none;color:inherit;background:rgba(255,255,255,.85);
+    border:1px solid rgba(190,154,110,.3);border-radius:22px;padding:22px 22px;
+    box-shadow:0 14px 34px -20px rgba(66,52,33,.4);transition:.22s}
+  a.card:hover{transform:translateY(-3px);box-shadow:0 22px 44px -20px rgba(66,52,33,.5);border-color:var(--gold)}
+  .tag{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--gold-deep);font-weight:600}
+  a.card h2{font-family:var(--serif);font-size:22px;font-weight:600;margin:6px 0 6px}
+  a.card p{font-size:13.5px;color:var(--ink-soft);line-height:1.5}
+  .go{margin-top:14px;display:inline-flex;align-items:center;gap:7px;font-size:14px;font-weight:600;color:var(--gold-deep)}
+  .foot{margin-top:26px;font-size:12px;color:var(--ink-soft);text-align:center;max-width:32ch;line-height:1.5}
+</style>
+</head>
+<body>
+  <div class="orb"></div>
+  <h1>Soul Chat</h1>
+  <div class="sub">Zwei UX-Richtungen für das Leadmagnet-Erlebnis. Am besten auf dem Handy öffnen.</div>
+  <div class="cards">
+    <a class="card" href="chat.html">
+      <div class="tag">Variante A · Conversation</div>
+      <h2>Das lebendige Gespräch</h2>
+      <p>Wie ein Messenger, aber warm: Präsenz-Orb, „schreibt…", Nachrichten kommen einzeln, Quick-Reply-Chips, gemeinsamer Atem-Moment und personalisiertes Reveal.</p>
+      <span class="go">Öffnen →</span>
+    </a>
+    <a class="card" href="flow.html">
+      <div class="tag">Variante B · Flow (Stella-Style)</div>
+      <h2>Eine Frage, ein Screen</h2>
+      <p>Kein Chat-Verlauf. Der Chat schreibt animiert („Ich bin du. Deine Seele."), du antwortest per Text, es blättert weiter. Immer Text-Input, sanftes Nachhaken bei „Ja"-Antworten, Fortschrittsbalken, Zurück-Button.</p>
+      <span class="go">Öffnen →</span>
+    </a>
+  </div>
+  <div class="foot">Prototyp · Laura Seiler Life Coaching. Ton-Toggle & Neustart sind in jeder Variante oben.</div>
+</body>
+</html>
