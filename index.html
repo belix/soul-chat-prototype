@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover, interactive-widget=resizes-content" />
 <title>Soul Chat — Flow (Variante B)</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -15,8 +15,8 @@
     --serif:'Fraunces',Georgia,serif;--sans:'Inter',-apple-system,sans-serif;
   }
   *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-  html,body{height:100%}
-  body{font-family:var(--sans);background:#E7DECF;
+  html,body{height:100%;overflow:hidden}
+  body{font-family:var(--sans);background:#E7DECF;position:fixed;inset:0;
     display:flex;align-items:center;justify-content:center;color:var(--ink)}
   .phone{position:relative;width:100%;max-width:440px;height:100dvh;overflow:hidden;
     display:flex;flex-direction:column;isolation:isolate;
@@ -48,11 +48,15 @@
 
   /* question stage */
   .stage{position:relative;z-index:2;flex:1;display:flex;flex-direction:column;overflow:hidden}
-  .qArea{padding:12dvh 30px 20px;transition:opacity .4s ease,transform .4s ease;flex:1;overflow-y:auto}
+  .qArea{padding:12dvh 30px 20px;transition:opacity .4s ease,transform .4s ease;flex:1;overflow-y:auto;
+    display:flex;flex-direction:column}
   .qArea::-webkit-scrollbar{width:0}
   .qArea.leaving{opacity:0;transform:translateY(-26px)}
   .qArea.closing{display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;
     padding-top:6dvh}
+  /* keyboard open: pull question down to sit just above the input */
+  body.kb{align-items:flex-start}
+  .phone.kb .qArea{justify-content:flex-end;padding-top:14px;padding-bottom:14px}
   .q{font-family:var(--serif);font-size:23px;line-height:1.42;font-weight:500;color:var(--ink);
     margin-bottom:.7em}
   .q:last-child{margin-bottom:0}
@@ -182,21 +186,39 @@ let idx=0, busy=false, nudged=false, soundOn=true, skipFn=null;
 const answers={}, seen=new Set();
 
 const setProg=f=>fill.style.width=Math.round(f*100)+'%';
-function buzz(){ if(navigator.vibrate) navigator.vibrate(8); }
 let actx;
-function chime(){
-  if(!soundOn) return;
+function ensureAudio(){
   try{
     actx=actx||new (window.AudioContext||window.webkitAudioContext)();
-    const t=actx.currentTime;
-    [[587,0],[784,.09]].forEach(([f,dl])=>{
-      const o=actx.createOscillator(),g=actx.createGain();
-      o.type='sine';o.frequency.value=f;
-      g.gain.setValueAtTime(0,t+dl);g.gain.linearRampToValueAtTime(.045,t+dl+.02);
-      g.gain.exponentialRampToValueAtTime(.0001,t+dl+.5);
-      o.connect(g).connect(actx.destination);o.start(t+dl);o.stop(t+dl+.55);
-    });
+    if(actx.state==='suspended') actx.resume();
   }catch(e){}
+  return actx;
+}
+// iOS starts audio suspended until a user gesture — unlock on any interaction
+['touchstart','pointerdown','click','keydown'].forEach(ev=>
+  window.addEventListener(ev, ensureAudio, {passive:true}));
+
+function buzz(ms){ try{ if(navigator.vibrate) navigator.vibrate(ms||10); }catch(e){} }
+
+function chime(){
+  if(!soundOn) return; const a=ensureAudio(); if(!a||a.state!=='running') return;
+  const t=a.currentTime;
+  [[587,0],[784,.09]].forEach(([f,dl])=>{
+    const o=a.createOscillator(),g=a.createGain();
+    o.type='sine';o.frequency.value=f;
+    g.gain.setValueAtTime(0,t+dl);g.gain.linearRampToValueAtTime(.09,t+dl+.02);
+    g.gain.exponentialRampToValueAtTime(.0001,t+dl+.55);
+    o.connect(g).connect(a.destination);o.start(t+dl);o.stop(t+dl+.6);
+  });
+}
+function typingTick(){
+  if(!soundOn) return; const a=actx; if(!a||a.state!=='running') return;
+  const t=a.currentTime;
+  const o=a.createOscillator(),g=a.createGain();
+  o.type='triangle';o.frequency.value=1450+Math.random()*260;
+  g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.022,t+.004);
+  g.gain.exponentialRampToValueAtTime(.0001,t+.05);
+  o.connect(g).connect(a.destination);o.start(t);o.stop(t+.055);
 }
 function sparkles(){
   const em=['✨','·','✦','˚','✧'];
@@ -231,8 +253,9 @@ function renderInstant(text){
 }
 
 /* animated "writing" — types out character by character, like a chatbot.
+   Driven by requestAnimationFrame + a single growing text node for buttery-smooth output.
    Tap the message to skip to the full text. */
-const CHAR_MS=22, SENT_PAUSE=260, COMMA_PAUSE=130;
+const CHAR_MS=26, SENT_PAUSE=210, COMMA_PAUSE=110, PARA_PAUSE=260;
 function writeMessage(text){
   return new Promise(resolve=>{
     busy=true; setSendState();
@@ -240,41 +263,46 @@ function writeMessage(text){
     const dots=document.createElement('div'); dots.className='dots';
     dots.innerHTML='<span></span><span></span><span></span>';
     qArea.appendChild(dots);
-    let cancelled=false, timer=null;
+    let cancelled=false, raf=0;
     function done(instant){
       if(cancelled) return; cancelled=true;
-      clearTimeout(timer); clearTimeout(startTimer);
+      clearTimeout(startTimer); cancelAnimationFrame(raf);
       if(instant) renderInstant(text);
       skipFn=null; busy=false; setSendState(); resolve();
     }
+    skipFn=()=>done(true);
     const startTimer=setTimeout(()=>{
       qArea.innerHTML='';
-      const paras=text.split('\n\n');
-      let pi=0, ci=0;
-      let pEl=document.createElement('p'); pEl.className='q'; qArea.appendChild(pEl);
-      const cursor=document.createElement('span'); cursor.className='cursor'; pEl.appendChild(cursor);
-      (function tick(){
+      // flat token sequence: characters + paragraph breaks
+      const paras=text.split('\n\n'); const seq=[];
+      paras.forEach((p,i)=>{ if(i>0) seq.push({br:true}); for(const ch of p) seq.push({ch}); });
+      const cursor=document.createElement('span'); cursor.className='cursor';
+      let node=null;
+      function newPara(){ const p=document.createElement('p'); p.className='q';
+        node=document.createTextNode(''); p.appendChild(node); p.appendChild(cursor); qArea.appendChild(p); }
+      newPara();
+      const delayFor=ch => '.!?'.includes(ch)?SENT_PAUSE : ',;:'.includes(ch)?COMMA_PAUSE : CHAR_MS;
+      let k=0, acc=0, need=CHAR_MS, last=performance.now(), ticks=0;
+      function frame(now){
         if(cancelled) return;
-        if(pi>=paras.length){ cursor.remove(); done(false); return; }
-        const para=paras[pi];
-        if(ci<para.length){
-          const ch=para[ci++];
-          cursor.insertAdjacentText('beforebegin', ch);
-          qArea.scrollTop=qArea.scrollHeight;
-          let d=CHAR_MS;
-          if('.!?'.includes(ch)) d=SENT_PAUSE;
-          else if(',;:'.includes(ch)) d=COMMA_PAUSE;
-          timer=setTimeout(tick,d);
-        }else{
-          pi++; ci=0;
-          if(pi<paras.length){
-            pEl=document.createElement('p'); pEl.className='q'; qArea.appendChild(pEl); pEl.appendChild(cursor);
-            timer=setTimeout(tick,300);
-          }else{ cursor.remove(); done(false); }
+        acc += now-last; last=now;
+        let guard=0;
+        while(acc>=need && k<seq.length && guard++<8){
+          acc-=need;
+          const it=seq[k++];
+          if(it.br){ newPara(); need=PARA_PAUSE; }
+          else{
+            node.data += it.ch;
+            if(it.ch!==' '){ ticks++; if(ticks%2===0) typingTick(); if(ticks%3===0) buzz(4); }
+            need=delayFor(it.ch);
+          }
         }
-      })();
+        if(qArea.scrollHeight>qArea.clientHeight) qArea.scrollTop=qArea.scrollHeight;
+        if(k>=seq.length){ cursor.remove(); done(false); return; }
+        raf=requestAnimationFrame(frame);
+      }
+      raf=requestAnimationFrame(frame);
     },560);
-    skipFn=()=>done(true);
   });
 }
 
@@ -377,6 +405,18 @@ document.getElementById('sound').addEventListener('click',function(){
   soundOn=!soundOn; this.style.opacity=soundOn?'1':'.4'; if(soundOn)chime();
 });
 restartBtn.addEventListener('click',start);
+
+/* keyboard handling: keep the input just above the keyboard, question right above it */
+const vv=window.visualViewport;
+function onVV(){
+  if(!vv) return;
+  const kb=(window.innerHeight - vv.height) > 120;   // keyboard is open
+  document.body.classList.toggle('kb', kb);
+  phone.classList.toggle('kb', kb);
+  phone.style.height = kb ? vv.height+'px' : '';
+  if(kb) requestAnimationFrame(()=>{ qArea.scrollTop=qArea.scrollHeight; });
+}
+if(vv){ vv.addEventListener('resize',onVV); vv.addEventListener('scroll',onVV); }
 
 function start(){
   idx=0; seen.clear(); Object.keys(answers).forEach(k=>delete answers[k]);
